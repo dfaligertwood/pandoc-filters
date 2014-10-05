@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from pandocfilters import RawBlock, RawInline, walk, stringify, toJSONFilter, Para, Note
 
-power_symbol = '|'
 seperator_symbol = ':'
 
 """
@@ -15,7 +14,8 @@ Todo: Make it include the edNotes.sty module in header
 """
 
 class WalkFilter:
-    def __init__(self):
+    def __init__(self, power_symbol):
+        self.power_symbol = power_symbol
         self.divider = True
         self.divider_space = True
         self.powersym = True
@@ -23,7 +23,7 @@ class WalkFilter:
     def filter_latex(self, key, val, fmt, meta):
         if key == 'Para':
             return walk(val, self.filter_latex, "", {})
-        elif self.powersym and val == power_symbol:
+        elif self.powersym and val == self.power_symbol:
             self.powersym = False
             return []
         elif self.powersym_space and key == 'Space':
@@ -38,7 +38,7 @@ class WalkFilter:
     def filter_lemma(self, key, val, fmt, meta):
         if key == 'Para':
             return walk(val, self.filter_lemma, "", {})
-        elif self.powersym and val == power_symbol:
+        elif self.powersym and val == self.power_symbol:
             self.powersym = False
             return []
         elif self.powersym_space and key == 'Space':
@@ -68,19 +68,26 @@ def latexBlock(s):
     return RawBlock('latex', s)
 
 def parse(key, val, fmt, meta):
+
+    power_functions = {
+                      '|': latexInline('\\Anote{'),
+                      '&': latexInline('\\Bnote{')
+                      }
+
     if key == 'Note':
-        contents = stringify(val)
-        if contents[0] == power_symbol:
+        first_letter = stringify(val)[0]
+        if first_letter in power_functions.keys():
             if fmt == 'latex':
-                arguments = WalkFilter().filter_latex
-                return ([latexInline('\\Anote{')] +
+                arguments = WalkFilter(first_letter).filter_latex
+                return ([power_functions[first_letter]] +
                         walk(val, arguments, "", {}) +
                         [latexInline('}')])
             else:
-                lemma = WalkFilter().filter_lemma
-                contents = WalkFilter().filter_contents
+                lemma = WalkFilter(first_letter).filter_lemma
+                contents = WalkFilter(first_letter).filter_contents
                 return (walk(val, lemma, "", {}) +
                         [Note(walk(val, contents, "", {}))])
+
     if fmt == 'latex' and key == 'Div':
         [[ident, classes, kvs], contents] = val
         if "edition" in classes:
@@ -88,7 +95,7 @@ def parse(key, val, fmt, meta):
                                 '\\begin{linenumbers}\n' +
                                 '\\modulolinenumbers[2]\n' +
                                 '\\firstlinenumber{1}')] +
-                    val +
+                    contents +
                     [latexBlock('\\end{linenumbers}\n\\end{verse}')])
 
 if __name__ == "__main__":
