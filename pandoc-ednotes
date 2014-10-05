@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+from pandocfilters import RawBlock, RawInline, walk, stringify, toJSONFilter, Para, Note
+
+power_symbol = '|'
+seperator_symbol = ':'
+
+"""
+Does annotation stuff. For use with edNotes.sty.
+HORRIFICALLY FRAGILE HORRIFICALLY HACKY DO NOT USE
+ONCE PANDOC IMPLEMENTS A PROPER METHOD FOR FILTERING
+NOTES.
+
+Todo: Make it include the edNotes.sty module in header
+      includes for LaTeX output.
+"""
+
+class WalkFilter:
+    def __init__(self):
+        self.divider = True
+        self.divider_space = True
+        self.powersym = True
+        self.powersym_space = True
+    def filter_latex(self, key, val, fmt, meta):
+        if key == 'Para':
+            return walk(val, self.filter_latex, "", {})
+        elif self.powersym and val == power_symbol:
+            self.powersym = False
+            return []
+        elif self.powersym_space and key == 'Space':
+            self.powersym_space = False
+            return []
+        elif self.divider and val == seperator_symbol:
+            self.divider = False
+            return [latexInline('}{')]
+        elif self.divider_space and not self.divider and key == 'Space':
+            self.divider_space = False
+            return []
+    def filter_lemma(self, key, val, fmt, meta):
+        if key == 'Para':
+            return walk(val, self.filter_lemma, "", {})
+        elif self.powersym and val == power_symbol:
+            self.powersym = False
+            return []
+        elif self.powersym_space and key == 'Space':
+            self.powersym_space = False
+            return []
+        elif self.divider and val == seperator_symbol:
+            self.divider = False
+            return []
+        elif not self.divider:
+            return []
+    def filter_contents(self, key, val, fmt, meta):
+        if key == 'Para':
+            return [Para(walk(val, self.filter_contents, "", {}))]
+        if self.divider and val == seperator_symbol:
+            self.divider = False
+            return []
+        elif self.divider:
+            return []
+        elif self.divider_space and not self.divider and key == 'Space':
+            self.divider_space = False
+            return []
+
+def latexInline(s):
+    return RawInline('latex', s)
+
+def latexBlock(s):
+    return RawBlock('latex', s)
+
+def parse(key, val, fmt, meta):
+    if key == 'Note':
+        contents = stringify(val)
+        if contents[0] == power_symbol:
+            if fmt == 'latex':
+                arguments = WalkFilter().filter_latex
+                return ([latexInline('\\Anote{')] +
+                        walk(val, arguments, "", {}) +
+                        [latexInline('}')])
+            else:
+                lemma = WalkFilter().filter_lemma
+                contents = WalkFilter().filter_contents
+                return (walk(val, lemma, "", {}) +
+                        [Note(walk(val, contents, "", {}))])
+    if fmt == 'latex' and key == 'Div':
+        [[ident, classes, kvs], contents] = val
+        if "edition" in classes:
+            return ([latexBlock('\\begin{verse}\n' +
+                                '\\begin{linenumbers}\n' +
+                                '\\modulolinenumbers[2]\n' +
+                                '\\firstlinenumber{1}')] +
+                    val +
+                    [latexBlock('\\end{linenumbers}\n\\end{verse}')])
+
+if __name__ == "__main__":
+  toJSONFilter(parse)
