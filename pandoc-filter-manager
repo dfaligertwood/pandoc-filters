@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+def interpretArr(filters, document, fmt):
+    for f in filters['c']:
+        altered = interpretInline(f, document, fmt)
+        document = altered
+
+    return document
+
+def interpretInline(filtr, document, fmt):
+    from subprocess import Popen, PIPE
+    from json import dumps, loads
+
+    filter_process = Popen([filtr['c'][0]['c'], fmt], stdin=PIPE, stdout=PIPE)
+    altered_document_json = filter_process.communicate(input=dumps(document))[0]
+
+    return loads(altered_document_json)
+
+def interpret(doc, fmt):
+    if not doc[0]['unMeta'].get('filters'): return doc
+
+    filters = doc[0]['unMeta']['filters']
+
+    if filters['t'] == 'MetaList':
+        return interpretArr(filters, doc, fmt)
+    elif filters['t'] == 'MetaInlines':
+        return interpretInline(filters, doc, fmt)
+
+    return doc 
+
+from json import load, dump
+from sys import stdin, stdout, argv
+
+document = load(stdin)
+
+if len(argv) > 1:
+    format = argv[1]
+else:
+    format = ""
+
+dump(interpret(document, format), stdout)
