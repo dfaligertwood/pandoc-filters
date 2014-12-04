@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+def interpretArr(bibliographies, document, fmt):
+    for b in bibliographies['c']:
+        altered = interpretInline(b['c'], document, fmt)
+        document = altered
+
+    return document
+
+def interpretInline(bibliography, document, fmt):
+    from subprocess import Popen, PIPE
+    from json import dumps, loads
+    from pandocfilters import Header, stringify, attributes
+    from sys import stderr
+
+    document_with_bibliography = document
+    document_with_bibliography[0]['unMeta']['bibliography'] = bibliography[0]
+
+    header = bibliography[1]['c']
+    header_id = stringify(bibliography[2])
+
+    document_with_bibliography[1].append(Header(1, \
+                                                attributes({"id": header_id}), \
+                                                header))
+
+    filter_process = Popen(['pandoc-citeproc', fmt], stdin=PIPE, stdout=PIPE)
+    altered_document_with_bibliography_json = \
+            filter_process.communicate(input=dumps(document_with_bibliography))[0]
+
+    altered_document_with_bibliography = loads(altered_document_with_bibliography_json)
+
+    altered_document = altered_document_with_bibliography
+
+    return altered_document
+
+def interpret(doc, fmt):
+    if not doc[0]['unMeta'].get('bibliographies'): return doc
+
+    bibliographies = doc[0]['unMeta']['bibliographies']
+
+    if bibliographies['t'] == 'MetaList':
+        return interpretArr(bibliographies, doc, fmt)
+    elif bibliographies['t'] == 'MetaInlines':
+        return interpretInline(bibliographies, doc, fmt)
+
+    return doc 
+
+from json import load, dump
+from sys import stdin, stdout, argv
+
+document = load(stdin)
+
+if len(argv) > 1:
+    format = argv[1]
+else:
+    format = ""
+
+dump(interpret(document, format), stdout)
