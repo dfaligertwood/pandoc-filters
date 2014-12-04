@@ -51,3 +51,67 @@ the parse function. Syntax:
 Adds the div styles `afterpage` and `center`. These only have an effect in 
 LaTeX output.
 
+## pandoc-multibib
+
+A sketch of a filter to add multiple-bibliography support to pandoc-citeproc. 
+This is really the sort of functionality that should be added to 
+pandoc-citeproc proper.
+
+Unfortunately, this doesn’t *currently* work very well: it will make 
+bibliographies work, but it will only give in-text citations for the final 
+bibliography file which passed over the text.
+
+Current syntax looks like this:
+
+```
+---
+bibliographies:
+    - ['bibliography1.whatever', 'bibliography title', 'title-id']
+    - ['bibliography2.whatever', 'bibliography title', 'title-id']
+---
+```
+
+to explain the current problems, here is a sample (not including bibliographic 
+files):
+
+```
+---
+bibliographies:
+	- ['test1.json', 'Primary Sources', 'PrimarySources']
+	- ['test2.json', 'Secondary Sources', 'SecondarySources']
+---
+
+[@Test1, p. 10]
+
+[@Test2, p. 15]
+```
+
+and the result:
+
+```
+(???)
+
+(Bartlett and Bruce 2014, 15)
+
+
+
+PRIMARY SOURCES
+
+
+Fiske, Roger. 1986. _English Theatre Music in the Eighteenth Century_.
+2nd ed. Oxford: Oxford University Press.
+
+
+
+SECONDARY SOURCES
+
+
+Bartlett, Ian, and Robert J. Bruce. 2014. “Boyce, William.” In _Grove
+Music Online_. Oxford Music Online. Oxford University Press. Accessed
+July 30.
+http://www.oxfordmusiconline.com/subscriber/article/grove/music/40029.
+
+```
+
+or, in short: mostly unusable as it stands. May be updated in the future, or be 
+used as a basis by someone else.
