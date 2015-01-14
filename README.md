@@ -57,28 +57,28 @@ A sketch of a filter to add multiple-bibliography support to pandoc-citeproc.
 This is really the sort of functionality that should be added to 
 pandoc-citeproc proper.
 
-Unfortunately, this doesn’t *currently* work very well: it will make 
-bibliographies work, but it will only give in-text citations for the final 
-bibliography file which passed over the text.
-
 Current syntax looks like this:
 
 ```
 ---
 bibliographies:
-    - ['bibliography1.whatever', 'bibliography title', 'title-id']
-    - ['bibliography2.whatever', 'bibliography title', 'title-id']
+    - "Bibliography 1": "source.type"
+    - "Bibliography 2": "source2.type"
+bibliography: complete.type
 ---
 ```
 
-to explain the current problems, here is a sample (not including bibliographic 
-files):
+Note that there HAS TO BE a complete bibliography. This also permits 
+compilation when pandoc-multibib is not available.
+
+Sample of the tool in use (excluding test bibliographies):
 
 ```
 ---
 bibliographies:
-	- ['test1.json', 'Primary Sources', 'PrimarySources']
-	- ['test2.json', 'Secondary Sources', 'SecondarySources']
+	- "Primary Sources": "test1.json"
+	- "Secondary Sources": "test2.json"
+bibliography: test.json
 ---
 
 [@Test1, p. 10]
@@ -89,7 +89,7 @@ bibliographies:
 and the result:
 
 ```
-(???)
+(Fiske 1986, 10)
 
 (Bartlett and Bruce 2014, 15)
 
@@ -111,7 +111,5 @@ Music Online_. Oxford Music Online. Oxford University Press. Accessed
 July 30.
 http://www.oxfordmusiconline.com/subscriber/article/grove/music/40029.
 
-```
 
-or, in short: mostly unusable as it stands. May be updated in the future, or be 
-used as a basis by someone else.
+```
