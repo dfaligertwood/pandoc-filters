@@ -19,6 +19,7 @@ cabal-version:       >=1.10
 executable pandoc-divs
   main-is:             pandoc-divs.hs
   hs-source-dirs:      ./
+  other-modules:       Utils
   -- other-extensions:
   build-depends:       base >=4.8 && <4.9,
                        pandoc-types >= 1.12,
@@ -29,6 +30,7 @@ executable pandoc-divs
 executable pandoc-ednotes
   main-is:             pandoc-ednotes.hs
   hs-source-dirs:      ./
+  other-modules:       Utils
   build-depends:       base >=4.8 && <4.9,
                        pandoc-types >= 1.12,
                        containers >= 0.5
@@ -38,6 +40,7 @@ executable pandoc-ednotes
 executable pandoc-sidenotes
   main-is:             pandoc-sidenotes.hs
   hs-source-dirs:      ./
+  other-modules:       Utils
   build-depends:       base >=4.8 && <4.9,
                        pandoc-types >= 1.12,
                        containers >= 0.5
