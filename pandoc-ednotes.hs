@@ -1,27 +1,29 @@
 --------------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 --------------------------------------------------------------------------------
 
 import           Text.Pandoc.JSON
 import           Text.Pandoc.Generic
+import           Text.Pandoc.Walk
 import           Data.List
   ( isInfixOf )
-import qualified Data.Map as M
-import           Data.Map
-  ( Map )
+import           Data.List.Split
+  ( splitOn )
 import           Utils
 
 --------------------------------------------------------------------------------
 -- This filter takes divs with the class "edition" and inserts the LaTeX
 -- commands for an ednotes environment. It then converts all footnotes with
--- the relevant initial letters (see edNoteKeys) into ednotes.sty editorial
+-- the relevant initial letters (see ednoteKeys) into ednotes.sty editorial
 -- comments.
 
-ednoteKeys :: Map String Inline
-ednoteKeys = M.fromList
-              [ ("|", latexInline "\\Anote{")
-              , ("&", latexInline "\\Bnote{")
-              ]
+ednoteKeys :: [(String, Inline)]
+ednoteKeys = [ ("|", latexInline "\\Anote{")
+             , ("&", latexInline "\\Bnote{")
+             ]
+
+rmKeys :: Walkable Inline a => a -> a
+rmKeys = walk $ foldr1 (.) $ (rmStr . fst) <$> ednoteKeys
 
 main :: IO ()
 main = toJSONFilter ednotes
@@ -31,15 +33,15 @@ ednotes (Just "latex")
     = unionMetaInline
         "header-includes"
         (RawInline "tex" "\\usepackage[Apara, Bpara]{ednotes}")
-    . bottomUp (concatMap addEdnotes)
-ednotes _ = id
+    . bottomUp (concatMap processDivs)
+ednotes _ = rmKeys
 
-addEdnotes :: Block -> [Block]
-addEdnotes (Div (_, cs, _) contents)
-  | ["edition"] `isInfixOf` cs 
+processDivs :: Block -> [Block]
+processDivs (Div (_, cs, _) contents)
+  | ["edition"] `isInfixOf` cs
         = concat
           [ [beginText]
-          , bottomUp (concatMap footnotesToEdnotes) contents
+          , addNotes contents
           , [endText]
           ]
   where
@@ -51,25 +53,28 @@ addEdnotes (Div (_, cs, _) contents)
         , "\\modulolinenumbers[2]"
         , "\\firstlinenumber{1}"
         ]
+
     endText
       = latexBlock
       $ unlines
         [ "\\end{linenumbers}"
         , "\\end{verse}"
         ]
-addEdnotes x = [x]
+    
+    addNotes
+      = foldr1 (.)
+      $ ($ makeSplit)
+      <$> ($ latexInline "}")
+      <$> (uncurry overloadNote)
+      <$> ednoteKeys
 
-footnotesToEdnotes :: Inline -> [Inline]
-footnotesToEdnotes (Note contents)
-  = if M.member firstLetter ednoteKeys
-      then concat
-           [ [ ednoteKeys M.! firstLetter ]
-           , concatMap toInline contents
-           , [ latexInline "}" ]
-           ]
-      else [Note contents]
-  where
-    firstLetter = take 1 $ show contents
-footnotesToEdnotes x = [x]
+processDivs x = [rmKeys x]
+
+makeSplit :: [Inline] -> [Inline]
+makeSplit
+    = concat -- -> [Inline]
+    . uncurry ((++) . (++ [[latexInline "}{"]])) -- -> [[Inline]]
+    . splitAt 1         -- -> ([[Inline]], [[Inline]])
+    . splitOn [Space, Str ":", Space] -- -> [[Inline]]
 
 --------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 --------------------------------------------------------------------------------
 
 module Utils
@@ -10,9 +10,15 @@ module Utils
   , latexInline
   , latexBlock
   , toInline
+  , overloadNote
+  , rmStr
   ) where
 
 import           Text.Pandoc.Builder
+import           Text.Pandoc.Walk
+import           Text.Pandoc.Generic
+import           Data.Data
+  ( Data )
 import qualified Data.Map as M
 
 --------------------------------------------------------------------------------
@@ -70,3 +76,33 @@ toInline _                = [Str ""]
 
 doubleBreak :: [Inline]
 doubleBreak = LineBreak : [LineBreak]
+
+--------------------------------------------------------------------------------
+-- Overloads Note type using the first character of a Note. Prepends and Appends
+-- raw strings to the contents of the note minus the first character (and space,
+-- if present)
+
+overloadNote :: (Walkable Inline a, Data a) =>
+                String -> Inline -> Inline -> ([Inline] -> [Inline]) -> a -> a
+overloadNote char prefix postfix f
+    = walk (rmStr char)
+    . bottomUp (concatMap overloadNote')
+  where
+    overloadNote' n@(Note (Para (c : _) : _))
+      | c == Str char = concat [ [prefix]
+                               , f $ noteToInline $ rmStr char n
+                               , [postfix]
+                               ]
+    overloadNote' x = [x]
+
+    noteToInline (Note c) = concatMap toInline c
+    noteToInline x = [x]
+
+rmStr :: String -> Inline -> Inline
+rmStr char
+    = popFromNote Space
+    . popFromNote (Str char)
+  where
+    popFromNote o' (Note (Para (o : os) : ps))
+      | o == o' = Note $ Para os : ps
+    popFromNote _ x = x

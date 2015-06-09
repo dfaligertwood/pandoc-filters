@@ -33,7 +33,8 @@ executable pandoc-ednotes
   other-modules:       Utils
   build-depends:       base >=4.8 && <4.9,
                        pandoc-types >= 1.12,
-                       containers >= 0.5
+                       containers >= 0.5,
+                       split == 0.2.2
   ghc-options:         -Wall
   default-language:    Haskell2010
 
