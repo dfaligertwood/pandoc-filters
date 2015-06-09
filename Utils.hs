@@ -16,6 +16,7 @@ module Utils
 
 import           Text.Pandoc.Builder
 import           Text.Pandoc.Generic
+import           Text.Pandoc.Walk
 import           Data.Data
   ( Data )
 import qualified Data.Map as M
@@ -96,10 +97,10 @@ overloadNote char prefix postfix f
     noteToInline (Note c) = concatMap toInline c
     noteToInline x = [x]
 
-rmStr :: String -> Inline -> Inline
+rmStr :: (Walkable Inline a) => String -> a -> a
 rmStr char
-    = popFromNote Space
-    . popFromNote (Str char)
+    = walk $ popFromNote Space
+           . popFromNote (Str char)
   where
     popFromNote o' (Note (Para (o : os) : ps))
       | o == o' = Note $ Para os : ps
