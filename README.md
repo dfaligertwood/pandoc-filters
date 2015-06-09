@@ -5,6 +5,10 @@ Various filters I have written for use with jgm/pandoc.
 Mostly already available in dfaligertwood/utility-scripts, moved here for 
 clarity.
 
+I recently rewrote them all in haskell, mostly as an educational exercise. This 
+should make some of the scripts (eg. multibib) somewhat faster. To install, 
+just run ‘cabal install’ in this repo after cloning it to your local machine.
+
 
 ## pandoc-filter-manager
 
@@ -62,8 +66,8 @@ Current syntax looks like this:
 ```
 ---
 bibliographies:
-    - "Bibliography 1": "source.type"
-    - "Bibliography 2": "source2.type"
+    - "source1.type": Title of Bibliography 1
+    - "source2.type": Title of Bibliography 2
 bibliography: complete.type
 ---
 ```
@@ -75,41 +79,38 @@ Sample of the tool in use (excluding test bibliographies):
 
 ```
 ---
+filters:
+  - pandoc-multibib
 bibliographies:
-	- "Primary Sources": "test1.json"
-	- "Secondary Sources": "test2.json"
+  - test1.json: First Bibliography
+  - test2.json: Second Bibliography
 bibliography: test.json
 ---
 
-[@Test1, p. 10]
-
-[@Test2, p. 15]
+[@Shepherd_1961_i3] [@Square_1884_i5]
 ```
 
 and the result:
 
 ```
-(Fiske 1986, 10)
-
-(Bartlett and Bruce 2014, 15)
+(Shepherd 1961) (Square 1884)
 
 
 
-PRIMARY SOURCES
+FIRST BIBLIOGRAPHY
 
 
-Fiske, Roger. 1986. _English Theatre Music in the Eighteenth Century_.
-2nd ed. Oxford: Oxford University Press.
+Shepherd, Massey H., Jr. 1961. “The Formation and Influence of the
+Antiochene Liturgy.” _Dumbarton Oaks Papers_ 15 (January): 23–44.
+doi:10.2307/1291174. http://www.jstor.org/stable/1291174.
 
 
 
-SECONDARY SOURCES
+SECOND BIBLIOGRAPHY
 
 
-Bartlett, Ian, and Robert J. Bruce. 2014. “Boyce, William.” In _Grove
-Music Online_. Oxford Music Online. Oxford University Press. Accessed
-July 30.
-http://www.oxfordmusiconline.com/subscriber/article/grove/music/40029.
+Square, A. 1884. _Flatland: A Romance of Many Dimensions_. London:
+Seeley & Co.
 
 
 ```
