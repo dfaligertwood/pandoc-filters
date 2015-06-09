@@ -9,6 +9,9 @@ I recently rewrote them all in haskell, mostly as an educational exercise. This
 should make some of the scripts (eg. multibib) somewhat faster. To install, 
 just run ‘cabal install’ in this repo after cloning it to your local machine.
 
+NB. The format of pandoc-multibib has changed again! Sorry if you were using
+it... :(
+
 
 ## pandoc-filter-manager
 
