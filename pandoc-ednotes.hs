@@ -17,7 +17,7 @@ import           Utils
 -- the relevant initial letters into ednotes.sty editorial comments.
 
 rmKeys :: Walkable Inline a => a -> a
-rmKeys = walk $ rmStr "|" . rmStr "&"
+rmKeys = rmStr "|" . rmStr "&"
 
 main :: IO ()
 main = toJSONFilter ednotes
