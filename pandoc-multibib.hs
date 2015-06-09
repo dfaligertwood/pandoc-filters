@@ -22,10 +22,10 @@ multiBibs doc = processCites'
               . setMeta "suppress-bibliography"
                         (MetaBool True)
               . (\ (Pandoc m _) (Pandoc _ d') -> Pandoc m d') doc
-            =<< foldr addBib (return doc) (getBibs doc)
+            =<< foldl addBib (return doc) (getBibs doc)
 
-addBib :: (String, Block) -> IO Pandoc -> IO Pandoc
-addBib (bibFile, header) doc
+addBib :: IO Pandoc -> (String, Block) -> IO Pandoc
+addBib doc (bibFile, header)
     = processCites'
     . addBlock header
     . setMeta "bibliography"
