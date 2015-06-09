@@ -15,7 +15,6 @@ module Utils
   ) where
 
 import           Text.Pandoc.Builder
-import           Text.Pandoc.Walk
 import           Text.Pandoc.Generic
 import           Data.Data
   ( Data )
@@ -65,8 +64,8 @@ latexBlock = RawBlock "latex"
 -- convert block to array of inlines
 
 toInline :: Block -> [Inline]
-toInline (Plain is)       = is ++ doubleBreak
-toInline (Para is)        = is ++ doubleBreak
+toInline (Plain is)       = is ++ [Space]
+toInline (Para is)        = is ++ [Space]
 toInline (CodeBlock a s)  = [Code a s]
 toInline (RawBlock f s)   = [RawInline f s]
 toInline (BlockQuote bs)  = [Quoted SingleQuote (concatMap toInline bs)]
@@ -82,11 +81,10 @@ doubleBreak = LineBreak : [LineBreak]
 -- raw strings to the contents of the note minus the first character (and space,
 -- if present)
 
-overloadNote :: (Walkable Inline a, Data a) =>
+overloadNote :: (Data a) =>
                 String -> Inline -> Inline -> ([Inline] -> [Inline]) -> a -> a
 overloadNote char prefix postfix f
-    = walk (rmStr char)
-    . bottomUp (concatMap overloadNote')
+    = bottomUp (concatMap overloadNote')
   where
     overloadNote' n@(Note (Para (c : _) : _))
       | c == Str char = concat [ [prefix]

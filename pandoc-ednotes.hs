@@ -14,27 +14,21 @@ import           Utils
 --------------------------------------------------------------------------------
 -- This filter takes divs with the class "edition" and inserts the LaTeX
 -- commands for an ednotes environment. It then converts all footnotes with
--- the relevant initial letters (see ednoteKeys) into ednotes.sty editorial
--- comments.
-
-ednoteKeys :: [(String, Inline)]
-ednoteKeys = [ ("|", latexInline "\\Anote{")
-             , ("&", latexInline "\\Bnote{")
-             ]
+-- the relevant initial letters into ednotes.sty editorial comments.
 
 rmKeys :: Walkable Inline a => a -> a
-rmKeys = walk $ foldr1 (.) $ (rmStr . fst) <$> ednoteKeys
+rmKeys = walk $ rmStr "|" . rmStr "&"
 
 main :: IO ()
 main = toJSONFilter ednotes
 
 ednotes :: Maybe Format -> Pandoc -> Pandoc
 ednotes (Just "latex")
-    = unionMetaInline
-        "header-includes"
-        (RawInline "tex" "\\usepackage[Apara, Bpara]{ednotes}")
-    . bottomUp (concatMap processDivs)
-ednotes _ = rmKeys
+    = unionMetaInline "header-includes"
+                      (RawInline "tex" "\\usepackage[Apara, Bpara]{ednotes}")
+    . topDown (concatMap processDivs)
+ednotes _ = bottomUp (concatMap $ mvNotes "|")
+          . bottomUp (concatMap $ mvNotes "&")
 
 processDivs :: Block -> [Block]
 processDivs (Div (_, cs, _) contents)
@@ -53,28 +47,31 @@ processDivs (Div (_, cs, _) contents)
         , "\\modulolinenumbers[2]"
         , "\\firstlinenumber{1}"
         ]
-
     endText
       = latexBlock
       $ unlines
         [ "\\end{linenumbers}"
         , "\\end{verse}"
         ]
-    
     addNotes
-      = foldr1 (.)
-      $ ($ makeSplit)
-      <$> ($ latexInline "}")
-      <$> (uncurry overloadNote)
-      <$> ednoteKeys
-
+      = overloadNote "|" (latexInline "\\Anote{") (latexInline "}") makeSplit
+      . overloadNote "&" (latexInline "\\Bnote{") (latexInline "}") makeSplit
 processDivs x = [rmKeys x]
 
 makeSplit :: [Inline] -> [Inline]
 makeSplit
-    = concat -- -> [Inline]
-    . uncurry ((++) . (++ [[latexInline "}{"]])) -- -> [[Inline]]
-    . splitAt 1         -- -> ([[Inline]], [[Inline]])
-    . splitOn [Space, Str ":", Space] -- -> [[Inline]]
+    = concat
+    . uncurry ((++) . (++ [[latexInline "}{"]]))
+    . splitAt 1
+    . splitOn [Space, Str ":", Space]
+
+mvNotes :: String -> Inline -> [Inline]
+mvNotes char n@(Note (Para (c:_) : _))
+  | c == Str char = mvNote $ rmStr char n
+  where
+    mvNote (Note (Para cs : ps))
+        = (\ (w : w') -> w ++ [Note $ Para (concat w') : ps])
+        $ splitOn [Space, Str ":", Space] cs
+mvNotes _ x = [x]
 
 --------------------------------------------------------------------------------
