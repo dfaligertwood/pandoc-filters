@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                dfal-pandoc-filters
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            "A collection of pandoc filters. Written for personal use."
 -- description:
 homepage:            http://www.github.com/dfaligertwood/pandoc-filters
@@ -67,5 +67,16 @@ executable pandoc-multibib
                        pandoc-types >= 1.12,
                        containers >= 0.5,
                        pandoc-citeproc == 0.7.*
+  ghc-options:         -Wall
+  default-language:    Haskell2010
+
+executable pandoc-cv
+  main-is:             pandoc-cv.hs
+  hs-source-dirs:      ./
+  other-modules:       Utils
+  build-depends:       base >= 4.8 && < 4.9,
+                       pandoc-types >= 1.12,
+                       containers >= 0.5,
+                       pandoc >= 1.13 && <= 1.15
   ghc-options:         -Wall
   default-language:    Haskell2010
