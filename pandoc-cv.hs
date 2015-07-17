@@ -48,7 +48,13 @@ toEntry :: ([Inline], [[Block]]) -> Block
 toEntry (date, definitions)
     = latexBlock
     $ "\\entry{"
-      ++ intercalate "}{"
-                     (map (writeLaTeX def . Pandoc nullMeta)
-                          (take 4 $ [Plain date] : definitions ++ repeat [Null]) )
+      ++ intercalate
+          "}{"
+          (addBreaks (map (writeLaTeX def . Pandoc nullMeta)
+                     (take 4 $ [Plain date] : definitions ++ repeat [Null]) ))
       ++ "}"
+  where
+    addBreaks
+      = zipWith (\ i e -> if i == 3 && not (null e) then "\\\\" ++ e else e)
+                [0..]
+--------------------------------------------------------------------------------
