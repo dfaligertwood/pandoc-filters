@@ -21,7 +21,7 @@ executable pandoc-divs
   hs-source-dirs:      ./
   other-modules:       Utils
   -- other-extensions:
-  build-depends:       base >=4.8 && <4.9,
+  build-depends:       base >=4.8 && <5,
                        pandoc-types >= 1.12,
                        containers >= 0.5
   ghc-options:         -Wall
@@ -31,10 +31,10 @@ executable pandoc-ednotes
   main-is:             pandoc-ednotes.hs
   hs-source-dirs:      ./
   other-modules:       Utils
-  build-depends:       base >=4.8 && <4.9,
+  build-depends:       base >=4.8 && <5,
                        pandoc-types >= 1.12,
                        containers >= 0.5,
-                       split == 0.2.2
+                       split >= 0.2.2
   ghc-options:         -Wall
   default-language:    Haskell2010
 
@@ -42,7 +42,7 @@ executable pandoc-sidenotes
   main-is:             pandoc-sidenotes.hs
   hs-source-dirs:      ./
   other-modules:       Utils
-  build-depends:       base >=4.8 && <4.9,
+  build-depends:       base >=4.8 && <5,
                        pandoc-types >= 1.12,
                        containers >= 0.5
   ghc-options:         -Wall
@@ -51,7 +51,7 @@ executable pandoc-sidenotes
 executable pandoc-filter-manager
   main-is:             pandoc-filter-manager.hs
   hs-source-dirs:      ./
-  build-depends:       base >= 4.8 && <4.9,
+  build-depends:       base >= 4.8 && <5,
                        pandoc-types >= 1.12,
                        containers >= 0.5,
                        aeson >= 0.8,
@@ -63,10 +63,10 @@ executable pandoc-filter-manager
 executable pandoc-multibib
   main-is:             pandoc-multibib.hs
   hs-source-dirs:      ./
-  build-depends:       base >= 4.8 && <4.9,
+  build-depends:       base >= 4.8 && <5,
                        pandoc-types >= 1.12,
                        containers >= 0.5,
-                       pandoc-citeproc == 0.7.*
+                       pandoc-citeproc >= 0.7
   ghc-options:         -Wall
   default-language:    Haskell2010
 
@@ -74,9 +74,9 @@ executable pandoc-cv
   main-is:             pandoc-cv.hs
   hs-source-dirs:      ./
   other-modules:       Utils
-  build-depends:       base >= 4.8 && < 4.9,
+  build-depends:       base >= 4.8 && < 5,
                        pandoc-types >= 1.12,
                        containers >= 0.5,
-                       pandoc >= 1.13 && <= 1.15
+                       pandoc >= 1.13
   ghc-options:         -Wall
   default-language:    Haskell2010
